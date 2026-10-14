@@ -1,11 +1,17 @@
 import axios from 'axios';
 
+export const getHostName = () => {
+  if (typeof window !== 'undefined' && window.location.hostname) {
+    return window.location.hostname;
+  }
+  return '127.0.0.1';
+};
+
 const getBackendBase = () => {
   if (import.meta.env.VITE_API_URL) {
     return import.meta.env.VITE_API_URL.replace(/\/+$/, '');
   }
-  const host = typeof window !== 'undefined' && window.location.hostname ? window.location.hostname : '127.0.0.1';
-  return `http://${host}:8000`;
+  return `http://${getHostName()}:8000`;
 };
 
 const BACKEND_URL = getBackendBase();
