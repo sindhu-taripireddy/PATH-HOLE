@@ -113,3 +113,22 @@ User (Web Client)
   ├── 4. PostgreSQL Database Persistence
   └── 5. Interactive Dashboard, Leaflet Map & PDF Export
 ```
+
+---
+
+### 🚀 GitHub Pages & Cloud Deployment
+
+#### 1. Enable GitHub Pages Deployment
+This repository includes an automated GitHub Actions CI/CD workflow (`.github/workflows/deploy.yml`) that builds and deploys the frontend automatically on every push to `main`.
+
+1. Go to your repository on GitHub: `https://github.com/sindhu-taripireddy/PATH-HOLE`
+2. Click on **Settings** tab.
+3. In the left sidebar, click **Pages**.
+4. Under **Build and deployment** > **Source**, select **GitHub Actions**.
+5. Once selected, your site will be published at:
+   **`https://sindhu-taripireddy.github.io/PATH-HOLE/`**
+
+#### 2. Backend Hosting (FastAPI + YOLO)
+- GitHub Pages hosts static web frontends. To run the full AI object detection and database backend in the cloud, deploy the `backend/` folder to [Render](https://render.com), [Railway](https://railway.app), or [Hugging Face Spaces](https://huggingface.co/spaces).
+- In the frontend **Settings** page (or via `.env` `VITE_API_URL`), enter your deployed backend URL (or test against your local running instance at `http://127.0.0.1:8000`).
+

@@ -7,23 +7,29 @@ export const getHostName = () => {
   return '127.0.0.1';
 };
 
-const getBackendBase = () => {
+export const getBackendBase = () => {
+  if (typeof window !== 'undefined') {
+    const saved = localStorage.getItem('potholeguard_api_url');
+    if (saved) return saved.replace(/\/+$/, '');
+  }
   if (import.meta.env.VITE_API_URL) {
     return import.meta.env.VITE_API_URL.replace(/\/+$/, '');
   }
-  return `http://${getHostName()}:8000`;
+  const host = getHostName();
+  if (host === 'localhost' || host === '127.0.0.1') {
+    return `http://${host}:8000`;
+  }
+  return 'http://127.0.0.1:8000';
 };
 
-const BACKEND_URL = getBackendBase();
-const API_BASE_URL = `${BACKEND_URL}/api`;
-
 const api = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: `${getBackendBase()}/api`,
   timeout: 30000,
 });
 
-// Interceptor to attach JWT auth token
+// Interceptor to attach dynamic baseURL and JWT auth token
 api.interceptors.request.use((config) => {
+  config.baseURL = `${getBackendBase()}/api`;
   const token = localStorage.getItem('potholeguard_token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -98,7 +104,7 @@ export const getUploadUrl = (filepath) => {
   if (!filepath) return '';
   if (filepath.startsWith('http')) return filepath;
   const filename = filepath.split(/[/\\]/).pop();
-  return `${BACKEND_URL}/uploads/${filename}`;
+  return `${getBackendBase()}/uploads/${filename}`;
 };
 
 export default api;

@@ -1,18 +1,50 @@
-import React, { useState } from 'react';
-import { Settings as SettingsIcon, Sliders, Cpu, Save, Shield } from 'lucide-react';
+import { Settings as SettingsIcon, Sliders, Cpu, Save, Shield, Globe, CheckCircle2, AlertCircle } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import Navbar from '../components/Navbar';
 import { useAuth } from '../context/AuthContext';
+import { getBackendBase } from '../services/api';
+import axios from 'axios';
 
 const Settings = () => {
   const [confidenceThreshold, setConfidenceThreshold] = useState(35);
   const [autoSaveGps, setAutoSaveGps] = useState(true);
   const [modelType, setModelType] = useState('YOLOv8n (Fast Real-Time)');
+  const [apiUrl, setApiUrl] = useState(getBackendBase());
+  const [connectionStatus, setConnectionStatus] = useState(null);
+  const [testingConnection, setTestingConnection] = useState(false);
   const { showToast } = useAuth();
+
+  const handleTestConnection = async () => {
+    setTestingConnection(true);
+    setConnectionStatus(null);
+    try {
+      const cleanUrl = apiUrl.replace(/\/+$/, '');
+      const res = await axios.get(`${cleanUrl}/api/health`, { timeout: 5000 });
+      if (res.status === 200) {
+        setConnectionStatus({ success: true, message: 'Backend connected successfully!' });
+        showToast('Backend connection verified!', 'success');
+      } else {
+        setConnectionStatus({ success: false, message: `Unexpected status: ${res.status}` });
+      }
+    } catch (err) {
+      setConnectionStatus({
+        success: false,
+        message: err.message === 'Network Error' ? 'Cannot reach server. Ensure backend is running and CORS is allowed.' : err.message
+      });
+      showToast('Could not connect to backend server', 'error');
+    } finally {
+      setTestingConnection(false);
+    }
+  };
 
   const handleSave = (e) => {
     e.preventDefault();
-    showToast('Detection preferences saved successfully!', 'success');
+    if (apiUrl.trim()) {
+      localStorage.setItem('potholeguard_api_url', apiUrl.trim().replace(/\/+$/, ''));
+    } else {
+      localStorage.removeItem('potholeguard_api_url');
+    }
+    showToast('Detection and API preferences saved successfully!', 'success');
   };
 
   return (
@@ -79,6 +111,52 @@ const Settings = () => {
                   onChange={(e) => setAutoSaveGps(e.target.checked)}
                   className="w-5 h-5 accent-amber-500 cursor-pointer"
                 />
+              </div>
+
+              {/* Backend API Server Endpoint (Useful for GitHub Pages / Cloud Deployment) */}
+              <div className="p-4 rounded-xl bg-[#0F172A] border border-slate-800 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Globe className="w-4 h-4 text-amber-400" />
+                    <h4 className="text-xs font-bold text-white">Backend API Server Endpoint</h4>
+                  </div>
+                  <span className="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-400 font-mono">
+                    Cloud / Local
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-400">
+                  Target FastAPI backend URL (e.g., hosted on Render, Railway, or local machine <code className="text-amber-400">http://127.0.0.1:8000</code>).
+                </p>
+                <div className="flex gap-2">
+                  <input
+                    type="url"
+                    value={apiUrl}
+                    onChange={(e) => setApiUrl(e.target.value)}
+                    placeholder="http://127.0.0.1:8000"
+                    className="flex-1 px-4 py-2.5 rounded-xl bg-[#131C2E] border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 font-mono"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleTestConnection}
+                    disabled={testingConnection}
+                    className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-white border border-slate-700 transition disabled:opacity-50"
+                  >
+                    {testingConnection ? 'Testing...' : 'Test Connection'}
+                  </button>
+                </div>
+
+                {connectionStatus && (
+                  <div className={`flex items-center gap-2 p-2.5 rounded-lg text-xs ${
+                    connectionStatus.success ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'
+                  }`}>
+                    {connectionStatus.success ? (
+                      <CheckCircle2 className="w-4 h-4 shrink-0" />
+                    ) : (
+                      <AlertCircle className="w-4 h-4 shrink-0" />
+                    )}
+                    <span>{connectionStatus.message}</span>
+                  </div>
+                )}
               </div>
             </div>
 
