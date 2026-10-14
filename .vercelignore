@@ -1,0 +1,8 @@
+# Ignore backend Python files for Vercel frontend deployment
+backend/
+app.py
+run.bat
+start_backend.bat
+start_frontend.bat
+*.db
+*.sqlite3
